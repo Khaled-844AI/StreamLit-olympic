@@ -4,21 +4,17 @@ import plotly.express as px
 import sys
 import os
 
-# Add parent directory to path to allow importing utils
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils import load_data, process_data, sidebar_filters
 
 st.set_page_config(page_title="Global Analysis", page_icon="🗺️", layout="wide")
 
-# Load Data
 data = load_data()
 data = process_data(data)
 
-# Sidebar Filters
 selected_continent, selected_countries, selected_sports, selected_medal_types = sidebar_filters(data)
 
-# Helper function to get countries from continent selection
 def get_filtered_countries(data, selected_continent, selected_countries):
     if selected_countries:
         return selected_countries
@@ -30,27 +26,21 @@ effective_countries = get_filtered_countries(data, selected_continent, selected_
 
 st.title("🗺️ Global Analysis")
 
-# Prepare Data for Analysis
-# Merge medals_total with nocs to get Continent
+
 medals_total = data.get('medals_total', pd.DataFrame())
 nocs = data.get('nocs', pd.DataFrame())
 
 if not medals_total.empty and not nocs.empty:
-    # Ensure common column for merge. Usually 'country_code' or 'country'
-    # Let's assume 'country_code' in medals_total matches 'code' in nocs, or 'country' matches 'country'
-    # Inspecting column names would be ideal, but we'll try standard names
-    
-    # Try to merge on country name if code not obvious
-    # Assuming medals_total has 'country' and nocs has 'country'
+
     if 'country' in medals_total.columns and 'country' in nocs.columns:
         merged_df = pd.merge(medals_total, nocs, on='country', how='left')
     elif 'country_code' in medals_total.columns and 'code' in nocs.columns:
         merged_df = pd.merge(medals_total, nocs, left_on='country_code', right_on='code', how='left')
     else:
-        merged_df = medals_total.copy() # Fallback
+        merged_df = medals_total.copy()
         st.error("Could not merge medals and NOCs data. Check column names.")
 
-    # Filter Data
+
     if effective_countries:
         merged_df = merged_df[merged_df['country'].isin(effective_countries)]
     
@@ -63,7 +53,6 @@ if not medals_total.empty and not nocs.empty:
     else:
         merged_df['Filtered_Total'] = 0
 
-    # 1. World Medal Map (Choropleth)
     st.subheader("World Medal Map")
     if not merged_df.empty:
         fig_map = px.choropleth(merged_df, 
@@ -77,15 +66,12 @@ if not medals_total.empty and not nocs.empty:
     else:
         st.info("No data available for map.")
 
-    # 2. Medal Hierarchy by Continent (Sunburst)
     st.subheader("Medal Hierarchy by Continent")
-    # Hierarchy: Continent -> Country -> Sport -> Medal Count
-    # medals_total doesn't have Sport. We need 'medals.csv' (individual medals) for Sport breakdown.
+
     medals_individual = data.get('medals', pd.DataFrame())
     
     if not medals_individual.empty and not nocs.empty:
-        # Merge individual medals with NOCs to get Continent
-        # medals.csv usually has 'country_code' or 'country'
+
         if 'country_code' in medals_individual.columns and 'code' in nocs.columns:
              medals_ind_merged = pd.merge(medals_individual, nocs, left_on='country_code', right_on='code', how='left')
         elif 'country' in medals_individual.columns and 'country' in nocs.columns:
@@ -94,7 +80,7 @@ if not medals_total.empty and not nocs.empty:
              medals_ind_merged = pd.DataFrame()
 
         if not medals_ind_merged.empty:
-            # Fix column names after merge if necessary (handle suffixes)
+
             if 'country' not in medals_ind_merged.columns and 'country_x' in medals_ind_merged.columns:
                 medals_ind_merged = medals_ind_merged.rename(columns={'country_x': 'country'})
             
@@ -113,7 +99,7 @@ if not medals_total.empty and not nocs.empty:
                  medals_ind_merged = medals_ind_merged[medals_ind_merged['medal_type'].isin(selected_medal_values)]
             
             # Group for Hierarchy
-            # We need columns: Continent, Country, Sport (Discipline), Count
+
             if 'Continent' in medals_ind_merged.columns and 'country' in medals_ind_merged.columns and 'discipline' in medals_ind_merged.columns:
                 hierarchy_df = medals_ind_merged.groupby(['Continent', 'country', 'discipline']).size().reset_index(name='Medal Count')
                 
@@ -147,8 +133,7 @@ if not medals_total.empty and not nocs.empty:
         if agg_cols:
             continent_medals = merged_df.groupby('Continent').agg(agg_cols).reset_index()
             
-            # Rename columns back to simple names for melting/plotting if needed, or adjust melt
-            # Let's rename them back to Gold, Silver, Bronze for consistency with the rest of the code logic
+ 
             reverse_mapping = {v: k for k, v in medal_mapping.items()}
             continent_medals = continent_medals.rename(columns=reverse_mapping)
             
@@ -170,7 +155,6 @@ if not medals_total.empty and not nocs.empty:
     else:
         st.warning("Continent data not available.")
 
-    # 4. Country vs. Medals (Top 20)
     st.subheader("Top 20 Countries Medal Breakdown")
     if not merged_df.empty:
         top_20 = merged_df.sort_values(by='Filtered_Total', ascending=False).head(20)

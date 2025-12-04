@@ -4,7 +4,7 @@ import plotly.express as px
 import sys
 import os
 
-# Add parent directory to path to allow importing utils
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils import load_data, process_data, sidebar_filters
@@ -18,7 +18,6 @@ data = process_data(data)
 # Sidebar Filters
 selected_continent, selected_countries, selected_sports, selected_medal_types = sidebar_filters(data)
 
-# Helper function to get countries from continent selection
 def get_filtered_countries(data, selected_continent, selected_countries):
     if selected_countries:
         return selected_countries
@@ -41,16 +40,10 @@ if not schedule_df.empty:
     # Filter by sport
     sched_viz = schedule_df.copy()
     if selected_sports:
-        # Use 'discipline' as it corresponds to sport in this dataset
         if 'discipline' in sched_viz.columns:
             sched_viz = sched_viz[sched_viz['discipline'].isin(selected_sports)]
     
-    # Need start and end time columns. 
-    # Assuming 'start_date', 'end_date' or similar.
-    # If only 'date' and 'time', need to combine.
-    # Let's assume standard columns for now or try to infer.
-    
-    # Check for common date columns
+
     date_col = None
     if 'start_date' in sched_viz.columns:
         date_col = 'start_date'
@@ -76,11 +69,9 @@ if not schedule_df.empty:
 else:
     st.info("Schedule data not available.")
 
-# 2. Medal Count by Sport (Treemap)
 st.subheader("Medal Count by Sport")
 if not medals_df.empty:
     # Group by Sport (discipline)
-    # Filter by country if selected
     medals_viz = medals_df.copy()
     if effective_countries:
         if 'country' in medals_viz.columns:
@@ -143,12 +134,10 @@ venue_coordinates = {
 }
 
 if not venues_df.empty:
-    # Need lat/lon
-    # Assuming 'latitude', 'longitude' or similar
+
     lat_col = 'latitude' if 'latitude' in venues_df.columns else 'lat'
     lon_col = 'longitude' if 'longitude' in venues_df.columns else 'lon'
     
-    # If columns missing, try to map from hardcoded dictionary
     if lat_col not in venues_df.columns or lon_col not in venues_df.columns:
         venues_df['lat'] = venues_df['venue'].map(lambda x: venue_coordinates.get(x, [None, None])[0])
         venues_df['lon'] = venues_df['venue'].map(lambda x: venue_coordinates.get(x, [None, None])[1])
