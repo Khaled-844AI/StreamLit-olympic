@@ -25,7 +25,7 @@ def load_data():
                 st.error(f"Error loading {file}: {e}")
         else:
             st.warning(f"File {file} not found in {DATA_FOLDER}")
-            # Create empty dataframe with expected columns to prevent crashes if file missing
+            #empty dataframe with expected columns to prevent crashes if file missing
             data[file.split('.')[0]] = pd.DataFrame()
 
     return data
@@ -44,7 +44,6 @@ def process_data(data):
     """Pre-process data, e.g., adding continent information."""
     if 'nocs' in data and not data['nocs'].empty:
         # Add continent column to nocs
-        # Assuming 'country' column exists in nocs.csv based on description
         if 'country' in data['nocs'].columns:
              data['nocs']['Continent'] = data['nocs']['country'].apply(get_continent)
         elif 'region' in data['nocs'].columns: # Sometimes it's called region
@@ -68,7 +67,6 @@ def sidebar_filters(data):
 
     # Country Filter
     if 'nocs' in data and not data['nocs'].empty:
-        # Filter countries based on selected continent
         df_countries = data['nocs']
         if selected_continent:
             df_countries = df_countries[df_countries['Continent'].isin(selected_continent)]
