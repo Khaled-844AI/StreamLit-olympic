@@ -4,7 +4,6 @@ import plotly.express as px
 import sys
 import os
 
-# Add parent directory to path to allow importing utils
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils import load_data, process_data, sidebar_filters
@@ -18,7 +17,6 @@ data = process_data(data)
 # Sidebar Filters
 selected_continent, selected_countries, selected_sports, selected_medal_types = sidebar_filters(data)
 
-# Helper function to get countries from continent selection
 def get_filtered_countries(data, selected_continent, selected_countries):
     if selected_countries:
         return selected_countries
@@ -32,29 +30,19 @@ st.title("👤 Athlete Performance")
 
 athletes_df = data.get('athletes', pd.DataFrame())
 coaches_df = data.get('coaches', pd.DataFrame())
-medals_df = data.get('medals', pd.DataFrame()) # Individual medals
+medals_df = data.get('medals', pd.DataFrame()) 
 nocs_df = data.get('nocs', pd.DataFrame())
 
 if not athletes_df.empty:
-    # Filter athletes based on global filters
+
     filtered_athletes = athletes_df.copy()
     
-    # Normalize sport column
-    if 'disciplines' in filtered_athletes.columns:
-        # Clean the disciplines column (e.g., "['Wrestling']" -> "Wrestling")
-        filtered_athletes['sport'] = filtered_athletes['disciplines'].astype(str).str.replace(r"[\[\]']", "", regex=True)
-    elif 'discipline' in filtered_athletes.columns:
-        filtered_athletes['sport'] = filtered_athletes['discipline']
-    elif 'sport' not in filtered_athletes.columns:
-        filtered_athletes['sport'] = 'Unknown'
+    filtered_athletes['sport'] = filtered_athletes['disciplines'].astype(str).str.replace(r"[\[\]']", "", regex=True)
 
     if effective_countries:
-        col = 'country' if 'country' in filtered_athletes.columns else 'noc'
-        if col in filtered_athletes.columns:
-            filtered_athletes = filtered_athletes[filtered_athletes[col].isin(effective_countries)]
+        filtered_athletes = filtered_athletes[filtered_athletes['country'].isin(effective_countries)]
     if selected_sports:
-        if 'sport' in filtered_athletes.columns:
-            filtered_athletes = filtered_athletes[filtered_athletes['sport'].isin(selected_sports)]
+        filtered_athletes = filtered_athletes[filtered_athletes['sport'].isin(selected_sports)]
 
     # 1. Athlete Detailed Profile Card
     st.subheader("Athlete Profile")
@@ -69,8 +57,7 @@ if not athletes_df.empty:
         col1, col2 = st.columns([1, 3])
         
         with col1:
-            # Placeholder image or real image if available
-            # Assuming 'image_url' or similar exists, otherwise placeholder
+
             st.image("https://via.placeholder.com/150", caption=selected_athlete_name, width=150)
         
         with col2:
@@ -84,7 +71,6 @@ if not athletes_df.empty:
             st.write(f"**Height:** {height if height > 0 else 'N/A'}")
             st.write(f"**Weight:** {weight if weight > 0 else 'N/A'}")
             
-            # Display coach from athlete data if available
             coach = athlete_info.get('coach', 'N/A')
             if pd.isna(coach) or coach == '':
                 coach = 'N/A'
@@ -111,15 +97,12 @@ if not athletes_df.empty:
 
     # 3. Gender Distribution
     st.subheader("Gender Distribution")
-    # Allow user to view by Continent, Country or World
     view_mode = st.radio("View Gender Distribution By:", ["World", "Continent", "Country"])
     
     gender_df = filtered_athletes.copy()
     
     if view_mode == "Continent":
-        # Need to merge with NOCs to get continent
         if not nocs_df.empty:
-             # Merge logic similar to Page 2
              if 'country' in gender_df.columns and 'country' in nocs_df.columns:
                 gender_df = pd.merge(gender_df, nocs_df[['country', 'Continent']], on='country', how='left')
              
@@ -143,7 +126,6 @@ if not athletes_df.empty:
     # 4. Top Athletes by Medals
     st.subheader("Top 10 Athletes by Medal Count")
     if not medals_df.empty:
-        # Filter medals data based on global filters
         filtered_medals = medals_df.copy()
         
         if effective_countries:
@@ -156,7 +138,6 @@ if not athletes_df.empty:
         
         if not filtered_medals.empty:
             # Count medals per athlete
-            # Assuming 'name' is the key
             athlete_medals = filtered_medals['name'].value_counts().reset_index()
             athlete_medals.columns = ['name', 'Medal Count']
             

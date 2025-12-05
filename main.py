@@ -4,12 +4,9 @@ import plotly.express as px
 from utils import load_data, process_data, sidebar_filters
 
 st.set_page_config(
-    page_title="Paris 2024 Olympics Dashboard",
-    page_icon="🏅",
     layout="wide"
 )
 
-# Load and Process Data
 data = load_data()
 data = process_data(data)
 
@@ -39,10 +36,7 @@ st.header("Key Performance Indicators")
 athletes_df = data.get('athletes', pd.DataFrame())
 if not athletes_df.empty:
     if effective_countries:
-
-        col = 'country' if 'country' in athletes_df.columns else 'noc'
-        if col in athletes_df.columns:
-            athletes_df = athletes_df[athletes_df[col].isin(effective_countries)]
+        athletes_df = athletes_df[athletes_df['country'].isin(effective_countries)]
     if selected_sports:
 
         col = 'sport' if 'sport' in athletes_df.columns else 'discipline'
@@ -77,9 +71,7 @@ total_medals_awarded = 0
 if not medals_total_df.empty:
 
     if effective_countries:
-        col = 'country' if 'country' in medals_total_df.columns else 'noc' # Check column name
-        if col in medals_total_df.columns:
-            medals_total_df = medals_total_df[medals_total_df[col].isin(effective_countries)]
+        medals_total_df = medals_total_df[medals_total_df['country'].isin(effective_countries)]
     
 
     medal_mapping = {'Gold': 'Gold Medal', 'Silver': 'Silver Medal', 'Bronze': 'Bronze Medal'}
@@ -104,11 +96,8 @@ with col_viz1:
     medals_agg = data.get('medals_total', pd.DataFrame())
 
     if not medals_agg.empty:
-
         if effective_countries:
-             col = 'country' if 'country' in medals_agg.columns else 'noc'
-             if col in medals_agg.columns:
-                medals_agg = medals_agg[medals_agg[col].isin(effective_countries)]
+            medals_agg = medals_agg[medals_agg['country'].isin(effective_countries)]
         
 
         medal_counts = {

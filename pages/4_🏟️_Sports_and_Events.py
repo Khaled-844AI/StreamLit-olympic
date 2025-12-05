@@ -43,12 +43,7 @@ if not schedule_df.empty:
         if 'discipline' in sched_viz.columns:
             sched_viz = sched_viz[sched_viz['discipline'].isin(selected_sports)]
     
-
-    date_col = None
-    if 'start_date' in sched_viz.columns:
-        date_col = 'start_date'
-    elif 'date' in sched_viz.columns:
-        date_col = 'date'
+    date_col = 'start_date'
         
     if date_col:
         sched_viz[date_col] = pd.to_datetime(sched_viz[date_col])
@@ -59,7 +54,7 @@ if not schedule_df.empty:
             sched_viz['end_date'] = pd.to_datetime(sched_viz['end_date'])
             
         # Use 'discipline' for y-axis and color
-        y_col = 'discipline' if 'discipline' in sched_viz.columns else 'sport'
+        y_col = 'discipline'
         
         fig_gantt = px.timeline(sched_viz, x_start=date_col, x_end='end_date', y=y_col, color=y_col,
                                 title="Event Schedule")
@@ -74,20 +69,16 @@ if not medals_df.empty:
     # Group by Sport (discipline)
     medals_viz = medals_df.copy()
     if effective_countries:
-        if 'country' in medals_viz.columns:
-            medals_viz = medals_viz[medals_viz['country'].isin(effective_countries)]
+        medals_viz = medals_viz[medals_viz['country'].isin(effective_countries)]
             
-    if 'discipline' in medals_viz.columns:
-        sport_medals = medals_viz['discipline'].value_counts().reset_index()
-        sport_medals.columns = ['Sport', 'Count']
-        
-        if not sport_medals.empty:
-            fig_tree = px.treemap(sport_medals, path=['Sport'], values='Count', title="Medals by Sport")
-            st.plotly_chart(fig_tree, use_container_width=True)
-        else:
-            st.info("No medals data available for the current selection.")
+    sport_medals = medals_viz['discipline'].value_counts().reset_index()
+    sport_medals.columns = ['Sport', 'Count']
+    
+    if not sport_medals.empty:
+        fig_tree = px.treemap(sport_medals, path=['Sport'], values='Count', title="Medals by Sport")
+        st.plotly_chart(fig_tree, use_container_width=True)
     else:
-        st.warning("Discipline/Sport column not found in medals data.")
+        st.info("No medals data available for the current selection.")
 else:
     st.info("Medals data not available.")
 
