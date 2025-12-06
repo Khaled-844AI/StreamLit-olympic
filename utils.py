@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 import pycountry_convert as pc
+import ast
 
 DATA_FOLDER = 'data'
 
@@ -42,13 +43,10 @@ def get_continent(country_name):
 @st.cache_data
 def process_data(data):
     """Pre-process data, e.g., adding continent information."""
+
     if 'nocs' in data and not data['nocs'].empty:
-        # Add continent column to nocs
-        if 'country' in data['nocs'].columns:
-             data['nocs']['Continent'] = data['nocs']['country'].apply(get_continent)
-        elif 'region' in data['nocs'].columns: # Sometimes it's called region
-             data['nocs']['Continent'] = data['nocs']['region'].apply(get_continent)
-    
+        data['nocs']['Continent'] = data['nocs']['country'].apply(get_continent)
+
     return data
 
 def sidebar_filters(data):
@@ -88,3 +86,19 @@ def sidebar_filters(data):
             selected_medal_type.append(medal)
             
     return selected_continent, selected_country, selected_sport, selected_medal_type
+
+
+
+
+def safe_parse(val):
+
+    if isinstance(val, list):
+        return val
+    
+    val = str(val)
+    
+    try:
+        parsed = ast.literal_eval(val)
+        return parsed if isinstance(parsed, list) else [parsed]
+    except:
+        return []

@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from utils import load_data, process_data, sidebar_filters
+import ast
+from utils import load_data, process_data, sidebar_filters, safe_parse
+
+
 
 st.set_page_config(
     layout="wide"
@@ -34,17 +37,17 @@ Explore the data to uncover insights about athletes, countries, sports, and meda
 st.header("Key Performance Indicators")
 
 athletes_df = data.get('athletes', pd.DataFrame())
+
+athletes_df['disciplines'] = athletes_df['disciplines'].apply(safe_parse)
+
+
 if not athletes_df.empty:
     if effective_countries:
         athletes_df = athletes_df[athletes_df['country'].isin(effective_countries)]
     if selected_sports:
-
-        col = 'sport' if 'sport' in athletes_df.columns else 'discipline'
-        if col in athletes_df.columns:
-            athletes_df = athletes_df[athletes_df[col].isin(selected_sports)]
+        athletes_df = athletes_df[athletes_df['disciplines'].apply(lambda x: any(str(d) in selected_sports for d in x))]
 
 total_athletes = len(athletes_df)
-
 
 nocs_df = data.get('nocs', pd.DataFrame())
 if not nocs_df.empty:
@@ -52,6 +55,7 @@ if not nocs_df.empty:
         col = 'country' if 'country' in nocs_df.columns else 'noc'
         if col in nocs_df.columns:
             nocs_df = nocs_df[nocs_df[col].isin(effective_countries)]
+
 total_countries = len(nocs_df)
 
 

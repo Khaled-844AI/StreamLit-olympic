@@ -37,24 +37,24 @@ medals_df = data.get('medals', pd.DataFrame())
 # 1. Event Schedule (Gantt Chart)
 st.subheader("Event Schedule")
 if not schedule_df.empty:
-    # Filter by sport
+
     sched_viz = schedule_df.copy()
     if selected_sports:
-        if 'discipline' in sched_viz.columns:
-            sched_viz = sched_viz[sched_viz['discipline'].isin(selected_sports)]
-    
+        sched_viz = sched_viz[sched_viz['discipline'].isin(selected_sports)]
+
     date_col = 'start_date'
+
         
     if date_col:
         sched_viz[date_col] = pd.to_datetime(sched_viz[date_col])
-        # Create a dummy end date if not present (e.g. + 2 hours)
+
         if 'end_date' not in sched_viz.columns:
             sched_viz['end_date'] = sched_viz[date_col] + pd.Timedelta(hours=2)
         else:
             sched_viz['end_date'] = pd.to_datetime(sched_viz['end_date'])
             
-        # Use 'discipline' for y-axis and color
-        y_col = 'discipline'
+
+        y_col = 'discipline' 
         
         fig_gantt = px.timeline(sched_viz, x_start=date_col, x_end='end_date', y=y_col, color=y_col,
                                 title="Event Schedule")
@@ -66,7 +66,7 @@ else:
 
 st.subheader("Medal Count by Sport")
 if not medals_df.empty:
-    # Group by Sport (discipline)
+
     medals_viz = medals_df.copy()
     if effective_countries:
         medals_viz = medals_viz[medals_viz['country'].isin(effective_countries)]
@@ -85,7 +85,7 @@ else:
 # 3. Venue Map
 st.subheader("Olympic Venues")
 
-# Hardcoded coordinates for venues since they are missing in the dataset
+
 venue_coordinates = {
     "Aquatics Centre": [48.9244, 2.3600],
     "Bercy Arena": [48.8387, 2.3785],
@@ -136,12 +136,17 @@ if not venues_df.empty:
         lon_col = 'lon'
 
     if lat_col in venues_df.columns and lon_col in venues_df.columns:
-        # Filter out venues with no coordinates
+
         venues_map = venues_df.dropna(subset=[lat_col, lon_col])
         
         if not venues_map.empty:
+            hover_cols = ['sports', 'url', 'date_start', 'date_end']
+
+            hover_data = [col for col in hover_cols if col in venues_map.columns]
+
             fig_map = px.scatter_mapbox(venues_map, lat=lat_col, lon=lon_col, hover_name='venue',
-                                        zoom=4, height=500) # Zoom out to see Tahiti
+                                        hover_data=hover_data,
+                                        zoom=4, height=500) 
             fig_map.update_layout(mapbox_style="open-street-map")
             st.plotly_chart(fig_map, use_container_width=True)
         else:
